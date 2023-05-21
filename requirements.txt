@@ -1,0 +1,7 @@
+fastapi
+uvicorn
+sqlalchemy==2.0.14
+psycopg2-binary
+python-dateutil
+pydantic
+requests==2.30.0
