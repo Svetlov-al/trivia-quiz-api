@@ -1,10 +1,6 @@
 # Импортируем необходимые компоненты из библиотеки SQLAlchemy
 from sqlalchemy import Column, Integer, String, DateTime
-from sqlalchemy.ext.declarative import declarative_base
-
-
-# Создаем базовый класс для наших моделей SQLAlchemy
-Base = declarative_base()
+from .database import Base
 
 
 # Определяем класс QuizQuestion, который описывает структуру таблицы в БД

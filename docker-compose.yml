@@ -1,33 +1,41 @@
-version: '3.9'  # Указывает версию синтаксиса docker-compose
+version: '3.9'
 
-services:  # Определяет сервисы, которые будут запущены
-  db:  # Имя сервиса - База данных
-    container_name: postgres  # Имя контейнера
-    image: postgres:14-alpine  # Используемый образ
-    restart: always  # Политика перезапуска (всегда перезапускать)
-    environment:  # Переменные окружения для контейнера
-      POSTGRES_DB: postgres
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-    volumes:  # Сопоставление путей каталогов между хостом и контейнером
-      - ./data/db:/var/lib/postgresql/data  # Сохранение данных базы данных на хосте
-    ports:  # Открытие портов
-      - "5432:5432"  # Сопоставление портов между хостом и контейнером
-  pgadmin:  # Сервис - веб-интерфейс для управления базой данных
+services:
+  db:
+    container_name: postgres
+    image: postgres:14-alpine
+    restart: always
+    environment:
+      POSTGRES_DB: ${DATABASE_NAME}
+      POSTGRES_USER: ${DATABASE_USERNAME}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
+    volumes:
+      - ./data/db:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+
+  pgadmin:
     container_name: pgadmin
     image: dpage/pgadmin4
     restart: always
     environment:
-      PGADMIN_DEFAULT_EMAIL: example@mail.com
-      PGADMIN_DEFAULT_PASSWORD: root
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
     ports:
-      - "5050:80"  # Сопоставление портов
-  web:  # Сервис - наше веб-приложение
-    build: .  # Путь к Dockerfile, который будет использоваться для сборки образа (в той же директории, что и docker-compose.yml)
-    command: uvicorn main:app --host 0.0.0.0 --port 8000  # Команда, запускаемая в контейнере
+      - "5051:80"
+
+  web:
+    build: .
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000
     volumes:
-      - .:/app  # Сопоставление каталогов
+      - .:/app
     ports:
-      - "8000:8000"  # Сопоставление портов
-    depends_on:  # Указывает на зависимость от другого сервиса
-      - db  # Веб-приложение зависит от базы данных
+      - "8000:8000"
+    depends_on:
+      - db
+    environment:
+      DATABASE_USERNAME: ${DATABASE_USERNAME}
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD}
+      DATABASE_HOSTNAME: db
+      DATABASE_PORT: 5432
+      DATABASE_NAME: ${DATABASE_NAME}
