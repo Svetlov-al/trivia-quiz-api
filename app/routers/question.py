@@ -1,8 +1,9 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, status, HTTPException
 from sqlalchemy.orm import Session
 from ..database import get_db  # Импортируем функцию для создания и закрытия сессии
 from .. import models, schemas  # Импортируем модели БД
-import dateutil.parser  # для преобразования строк в формате даты и времени в объекты datetime
+# для преобразования строк в формате даты и времени в объекты datetime
+import dateutil.parser
 import requests  # для выполнения HTTP-запросов
 from typing import List, Optional
 
@@ -32,7 +33,8 @@ def get_all_questions(db: Session = Depends(get_db),
 @router.get("/")
 def get_last_question(db: Session = Depends(get_db)):
     # Получаем последний добавленный вопрос
-    last_question = db.query(models.QuizQuestion).order_by(models.QuizQuestion.id.desc()).first()
+    last_question = db.query(models.QuizQuestion).order_by(
+        models.QuizQuestion.id.desc()).first()
 
     # Проверяем нашелся ли вопрос
     if last_question is not None:
@@ -41,7 +43,8 @@ def get_last_question(db: Session = Depends(get_db)):
             "id": last_question.id,
             "question_text": last_question.question_text,
             "answer_text": last_question.answer_text,
-            "created_at": str(last_question.created_at)  # преобразуем datetime в строку для ответа
+            # преобразуем datetime в строку для ответа
+            "created_at": str(last_question.created_at)
         }
     else:
         # В случае, если вопросов нет, возвращаем пустой объект
@@ -53,7 +56,8 @@ def get_last_question(db: Session = Depends(get_db)):
 def get_question_by_id(id: int,
                        db: Session = Depends(get_db)):
     # Получаем вопрос по его порядковому номеру
-    question = db.query(models.QuizQuestion).filter(models.QuizQuestion.id == id).first()
+    question = db.query(models.QuizQuestion).filter(
+        models.QuizQuestion.id == id).first()
 
     # Проверяем нашелся ли вопрос
     if question is not None:
@@ -62,11 +66,14 @@ def get_question_by_id(id: int,
             "id": question.id,
             "question_text": question.question_text,
             "answer_text": question.answer_text,
-            "created_at": str(question.created_at)  # преобразуем datetime в строку для ответа
+            # преобразуем datetime в строку для ответа
+            "created_at": str(question.created_at)
         }
     else:
         # В случае, если вопроса с таким id нет, возвращаем сообщение об ошибке
-        return {"detail": f"Question with id {id} does not exist"}
+        # return {"detail": f"Question with id {id} does not exist"}
+        raise HTTPException(
+            status_code=404, detail=f"Question with id {id} does not exist")
 
 
 # Маршурт DELETE для удаления вопроса по ID
@@ -74,12 +81,17 @@ def get_question_by_id(id: int,
 def delete_question(id: int,
                     db: Session = Depends(get_db)):
     # Получаем вопрос по его порядковому номеру
-    question = db.query(models.QuizQuestion).filter(models.QuizQuestion.id == id).first()
+    question = db.query(models.QuizQuestion).filter(
+        models.QuizQuestion.id == id).first()
     if question is None:
-        return {"detail": f"Question with id {id} does not exist"}  # Если вопрос с указанным ID не найден
+        # Если вопрос с указанным ID не найден
+        # return {"detail": f"Question with id {id} does not exist"}
+        raise HTTPException(
+            status_code=404, detail=f"Question with id {id} does not exist")
     db.delete(question)  # Удаляем вопрос
     db.commit()  # Сохраняем изменения
-    return {"detail": f"Question with id {id} deleted"}  # Возвращаем сообщение об успешном удалении
+    # Возвращаем сообщение об успешном удалении
+    return {"detail": f"Question with id {id} deleted"}
 
 
 # Маршрут POST для создания новых вопросов. Пример POST запроса {"questions_num": 5}
@@ -90,10 +102,12 @@ def create_item(item: schemas.Item,
     for _ in range(item.questions_num):
         for attempt in range(5):  # Ограничиваем количество попыток
             response = get_questions(1)  # Получаем один вопрос из API
-            question = response[0]  # API возвращает список, забираем первый элемент
+            # API возвращает список, забираем первый элемент
+            question = response[0]
 
             # Проверяем есть ли вопрос в базе
-            existing_question = db.query(models.QuizQuestion).filter(models.QuizQuestion.id == question['id']).first()
+            existing_question = db.query(models.QuizQuestion).filter(
+                models.QuizQuestion.id == question['id']).first()
 
             if existing_question is None:  # Если вопроса еще нет в базе данных
                 # преобразуем строку даты в объект datetime

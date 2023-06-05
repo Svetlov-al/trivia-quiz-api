@@ -17,3 +17,7 @@ __pycache__/
 
 # Игнорировать файлы с расширением .env
 .env
+
+.pytest_cache/
+
+.venv/

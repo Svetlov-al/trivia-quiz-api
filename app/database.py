@@ -1,4 +1,4 @@
-from sqlalchemy.ext.declarative import declarative_base
+import sqlalchemy
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from .config import settings
@@ -13,7 +13,7 @@ engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 # Создаем базовый класс для наших моделей SQLAlchemy
-Base = declarative_base()
+Base = sqlalchemy.orm.declarative_base()
 
 
 def get_db():
